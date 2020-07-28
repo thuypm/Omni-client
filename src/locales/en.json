@@ -4,11 +4,12 @@
     "dailySales": "Daily Sales",
     "performance": "Tổng quan",
     "simpleTable": "Simple Table",
-    "totalShipments": "Tổng số lượng bán được",
+    "totalShipments": "Trên toàn cầu",
     "chartCategories": [
-      "Accounts",
-      "Purchases",
-      "Sessions"
+      "Tổng số ca nhiễm",
+      "Đang điều trị",
+      "Tử vong",
+      "Khỏi bệnh"
     ],
     "tasks": "Tasks({count})",
     "today": "Today",

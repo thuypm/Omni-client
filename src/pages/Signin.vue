@@ -39,8 +39,8 @@
               x
             </a>
             <h2>LOGIN</h2>
-            <input type="text" placeholder="Username" />
-            <input type="password" placeholder="Password" />
+            <input v-model="formLogin.username" type="text" placeholder="Username" />
+            <input v-model="formLogin.password" type="password" placeholder="Password" />
             <button class="btn_login" @click="login()">LOGIN</button>
           </div>
 
@@ -68,17 +68,42 @@ export default {
   name: "Signin",
   data() {
     return {
-    //   error: false,
-    //   messErr: "",
-    //   formData: {
-    //     username: "",
-    //     password: ""
-    //   }
+      error: false,
+      messErr: "",
+      formLogin: {
+        username: "",
+        password: ""
+      },
+       formSignup: {
+        username: "",
+        password: ""
+      },
     };
   },
   methods: {
       login(){
-        
+        if (this.formData.username.length < 5) {
+        this.messErr = "username tối thiểu 5 ký tự";
+        this.error = true;
+        return false;
+      }
+      if (this.formData.password.length < 5) {
+        this.messErr = "password tối thiểu 5 ký tự";
+        this.error = true;
+        return false;
+      }
+      axios.post("http://thuypm.tk:3000/signin", this.formData).then(res => {
+        if (!res.data) {
+          this.messErr = "Tên tài khoản hoặc mật khẩu không đúng";
+          this.error = true;
+        } else {
+          this.error = false;
+          localStorage.setItem("token", res.data.token);
+          localStorage.setItem("username", res.data.username);
+          localStorage.setItem("avatar", res.data.avatar);
+          this.$router.replace("/");
+        }
+      });
       },
       signup(){},
 

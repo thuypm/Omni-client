@@ -1,28 +1,71 @@
 <template>
   <div>
-
+    <div class="row">
+    </div>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="form-group">
+          <form action>
+            <h5 class="title">Chọn quốc gia</h5>
+            <input
+              list="selectCountry"
+              aria-describedby="addon-right addon-left"
+              placeholder="Chọn quốc gia"
+              class="form-control"
+            @change="getData()"
+            />
+            <datalist id="selectCountry">
+              <option v-for="(country,index) in countries" :key="index" :value="index + '. ' + country.Country"></option>
+            </datalist>
+          </form>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="form-group">
+          <form action>
+            <h5 class="title">Chọn thời điểm xem</h5>
+            <input
+              list="selectTime"
+              aria-describedby="addon-right addon-left"
+              placeholder="Chọn thời gian xem"
+              class="form-control"
+            />
+            <datalist id="selectTime">
+              <option v-for="(option,index) in optionTime" :key="index" :value="option" ></option>
+            </datalist>
+          </form>
+        </div>
+      </div>
+    </div>
     <div class="row">
       <div class="col-12">
         <card type="chart">
           <template slot="header">
             <div class="row">
               <div class="col-sm-6" :class="isRTL ? 'text-right' : 'text-left'">
-                <h5 class="card-category">Tổng số lượng bán được</h5>
+                <h5 class="card-category">Thế giới</h5>
                 <h2 class="card-title">{{$t('dashboard.performance')}}</h2>
               </div>
               <div class="col-sm-6">
-                <div class="btn-group btn-group-toggle"
-                     :class="isRTL ? 'float-left' : 'float-right'"
-                     data-toggle="buttons">
-                  <label v-for="(option, index) in bigLineChartCategories"
-                         :key="option"
-                         class="btn btn-sm btn-primary btn-simple"
-                         :class="{active: bigLineChart.activeIndex === index}"
-                         :id="index">
-                    <input type="radio"
-                           @click="initBigChart(index)"
-                           name="options" autocomplete="off"
-                           :checked="bigLineChart.activeIndex === index">
+                <div
+                  class="btn-group btn-group-toggle"
+                  :class="isRTL ? 'float-left' : 'float-right'"
+                  data-toggle="buttons"
+                >
+                  <label
+                    v-for="(option, index) in bigLineChartCategories"
+                    :key="option"
+                    class="btn btn-sm btn-primary btn-simple"
+                    :class="{active: bigLineChart.activeIndex === index}"
+                    :id="index"
+                  >
+                    <input
+                      type="radio"
+                      @click="initBigChart(index)"
+                      name="options"
+                      autocomplete="off"
+                      :checked="bigLineChart.activeIndex === index"
+                    />
                     {{option}}
                   </label>
                 </div>
@@ -30,73 +73,71 @@
             </div>
           </template>
           <div class="chart-area">
-            <line-chart style="height: 100%"
-                        ref="bigChart"
-                        chart-id="big-line-chart"
-                        :chart-data="bigLineChart.chartData"
-                        :gradient-colors="bigLineChart.gradientColors"
-                        :gradient-stops="bigLineChart.gradientStops"
-                        :extra-options="bigLineChart.extraOptions">
-            </line-chart>
+            <line-chart
+              style="height: 100%"
+              ref="bigChart"
+              chart-id="big-line-chart"
+              :chart-data="bigLineChart.chartData"
+              :gradient-colors="bigLineChart.gradientColors"
+              :gradient-stops="bigLineChart.gradientStops"
+              :extra-options="bigLineChart.extraOptions"
+            ></line-chart>
           </div>
         </card>
       </div>
     </div>
+    <h4 class="title">Tại Việt Nam</h4>
     <div class="row">
       <div class="col-lg-4" :class="{'text-right': isRTL}">
         <card type="chart">
           <template slot="header">
-            <h5 class="card-category">Tiki</h5>
-            <h3 class="card-title">
-              <img src="https://res-1.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_120,w_120,f_auto,b_white,q_auto:eco/v1477385295/j0jb1n5fq6jz3h9xh58k.png" style="width:30px" alt="">
-               763,215</h3>
+            <h5 class="card-category">Số người mắc</h5>
+            <h3 class="card-title">{{vietnam.TotalConfirmed}}</h3>
           </template>
           <div class="chart-area">
-            <line-chart style="height: 100%"
-                        chart-id="purple-line-chart"
-                        :chart-data="purpleLineChart.chartData"
-                        :gradient-colors="purpleLineChart.gradientColors"
-                        :gradient-stops="purpleLineChart.gradientStops"
-                        :extra-options="purpleLineChart.extraOptions">
-            </line-chart>
+            <line-chart
+              style="height: 100%"
+              chart-id="purple-line-chart"
+              :chart-data="purpleLineChart.chartData"
+              :gradient-colors="purpleLineChart.gradientColors"
+              :gradient-stops="purpleLineChart.gradientStops"
+              :extra-options="purpleLineChart.extraOptions"
+            ></line-chart>
           </div>
         </card>
       </div>
       <div class="col-lg-4" :class="{'text-right': isRTL}">
         <card type="chart">
           <template slot="header">
-            <h5 class="card-category">lazada</h5>
-            <h3 class="card-title">
-              <img src="https://cdn.chanhtuoi.com/uploads/2020/06/logo-lazada-2.png" style="width:30px" alt="">
-              3,500€</h3>
+            <h5 class="card-category">Tử vong</h5>
+            <h3 class="card-title">{{vietnam.TotalDeaths}}</h3>
           </template>
           <div class="chart-area">
-            <bar-chart style="height: 100%"
-                       chart-id="blue-bar-chart"
-                       :chart-data="blueBarChart.chartData"
-                       :gradient-stops="blueBarChart.gradientStops"
-                       :extra-options="blueBarChart.extraOptions">
-            </bar-chart>
+            <bar-chart
+              style="height: 100%"
+              chart-id="blue-bar-chart"
+              :chart-data="blueBarChart.chartData"
+              :gradient-stops="blueBarChart.gradientStops"
+              :extra-options="blueBarChart.extraOptions"
+            ></bar-chart>
           </div>
         </card>
       </div>
       <div class="col-lg-4" :class="{'text-right': isRTL}">
         <card type="chart">
           <template slot="header">
-            <h5 class="card-category"> Shopee</h5>
-            
-            <h3 class="card-title">
-            <img src="https://seeklogo.com/images/S/shopee-logo-DD5CAE562A-seeklogo.com.png" alt="" style="width:30px">
-              
-               12,100K</h3>
+            <h5 class="card-category">Khỏi bệnh</h5>
+
+            <h3 class="card-title">{{vietnam.TotalRecovered}}</h3>
           </template>
           <div class="chart-area">
-            <line-chart style="height: 100%"
-                        chart-id="green-line-chart"
-                        :chart-data="greenLineChart.chartData"
-                        :gradient-stops="greenLineChart.gradientStops"
-                        :extra-options="greenLineChart.extraOptions">
-            </line-chart>
+            <line-chart
+              style="height: 100%"
+              chart-id="green-line-chart"
+              :chart-data="greenLineChart.chartData"
+              :gradient-stops="greenLineChart.gradientStops"
+              :extra-options="greenLineChart.extraOptions"
+            ></line-chart>
           </div>
         </card>
       </div>
@@ -107,11 +148,13 @@
           <template slot="header">
             <h6 class="title d-inline">{{$t('dashboard.tasks', {count: 5})}}</h6>
             <p class="card-category d-inline">{{$t('dashboard.today')}}</p>
-            <base-dropdown menu-on-right=""
-                           tag="div"
-                           title-classes="btn btn-link btn-icon"
-                           aria-label="Settings menu"
-                           :class="{'float-left': isRTL}">
+            <base-dropdown
+              menu-on-right
+              tag="div"
+              title-classes="btn btn-link btn-icon"
+              aria-label="Settings menu"
+              :class="{'float-left': isRTL}"
+            >
               <i slot="title" class="tim-icons icon-settings-gear-63"></i>
               <a class="dropdown-item" href="#pablo">{{$t('dashboard.dropdown.action')}}</a>
               <a class="dropdown-item" href="#pablo">{{$t('dashboard.dropdown.anotherAction')}}</a>
@@ -125,7 +168,7 @@
       </div>
       <div class="col-lg-6 col-md-12">
         <card class="card" :header-classes="{'text-right': isRTL}">
-          <h4 slot="header" class="card-title">{{$t('dashboard.simpleTable')}}</h4>
+          <h4 slot="header" class="card-title">Bảng xếp hạng</h4>
           <div class="table-responsive">
             <user-table></user-table>
           </div>
@@ -135,43 +178,72 @@
   </div>
 </template>
 <script>
-  import LineChart from '@/components/Charts/LineChart';
-  import BarChart from '@/components/Charts/BarChart';
-  import * as chartConfigs from '@/components/Charts/config';
-  import TaskList from './Dashboard/TaskList';
-  import UserTable from './Dashboard/UserTable';
-  import config from '@/config';
+import LineChart from "@/components/Charts/LineChart";
+import BarChart from "@/components/Charts/BarChart";
+import * as chartConfigs from "@/components/Charts/config";
+import TaskList from "./Dashboard/TaskList";
+import UserTable from "./Dashboard/UserTable";
+import config from "@/config";
+import axios from "axios";
 
-  export default {
-    components: {
-      LineChart,
-      BarChart,
-      TaskList,
-      UserTable
-    },
-    data() {
-      return {
-        bigLineChart: {
-          allData: [
-            [100, 70, 90, 70, 85, 60, 75, 60, 90, 80, 110, 100],
-            [80, 120, 105, 110, 95, 105, 90, 100, 80, 95, 70, 120],
-            [60, 80, 65, 130, 80, 105, 90, 130, 70, 115, 60, 130]
+export default {
+  components: {
+    LineChart,
+    BarChart,
+    TaskList,
+    UserTable,
+  },
+  data() {
+    return {
+      countries: [],
+      vietnam: {
+      },
+      option: {
+        country: "world",
+        time: "Toàn bộ"
+      },
+      optionTime:[
+        "Toàn bộ",
+        "Tuần này",
+        "Tháng này",
+        
+      ],
+      bigLineChart: {
+        allData: [
+          [100, 70, 90, 70, 85, 60, 75, 60, 90, 80, 110, 100],
+          [80, 120, 105, 110, 95, 105, 90, 100, 80, 95, 70, 120],
+          [60, 80, 65, 130, 80, 105, 90, 130, 70, 115, 60, 130],
+          [60, 80, 65, 130, 99, 105, 90, 81, 70, 115, 60, 79],
+        ],
+        activeIndex: 0,
+        chartData: {
+          datasets: [{}],
+          labels: [
+            "JAN",
+            "FEB",
+            "MAR",
+            "APR",
+            "MAY",
+            "JUN",
+            "JUL",
+            "AUG",
+            "SEP",
+            "OCT",
+            "NOV",
+            "DEC",
           ],
-          activeIndex: 0,
-          chartData: {
-            datasets: [{ }],
-            labels: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
-          },
-          extraOptions: chartConfigs.purpleChartOptions,
-          gradientColors: config.colors.primaryGradient,
-          gradientStops: [1, 0.4, 0],
-          categories: []
         },
-        purpleLineChart: {
-          extraOptions: chartConfigs.purpleChartOptions,
-          chartData: {
-            labels: ['JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
-            datasets: [{
+        extraOptions: chartConfigs.purpleChartOptions,
+        gradientColors: config.colors.primaryGradient,
+        gradientStops: [1, 0.4, 0],
+        categories: [],
+      },
+      purpleLineChart: {
+        extraOptions: chartConfigs.purpleChartOptions,
+        chartData: {
+          labels: ["JUL", "AUG", "SEP", "OCT", "NOV", "DEC"],
+          datasets: [
+            {
               label: "Data",
               fill: true,
               borderColor: config.colors.primary,
@@ -179,23 +251,25 @@
               borderDash: [],
               borderDashOffset: 0.0,
               pointBackgroundColor: config.colors.primary,
-              pointBorderColor: 'rgba(255,255,255,0)',
+              pointBorderColor: "rgba(255,255,255,0)",
               pointHoverBackgroundColor: config.colors.primary,
               pointBorderWidth: 20,
               pointHoverRadius: 4,
               pointHoverBorderWidth: 15,
               pointRadius: 4,
               data: [80, 100, 70, 20, 120, 80],
-            }]
-          },
-          gradientColors: config.colors.primaryGradient,
-          gradientStops: [1, 0.2, 0],
+            },
+          ],
         },
-        greenLineChart: {
-          extraOptions: chartConfigs.greenChartOptions,
-          chartData: {
-            labels: ['JUL', 'AUG', 'SEP', 'OCT', 'NOV'],
-            datasets: [{
+        gradientColors: config.colors.primaryGradient,
+        gradientStops: [1, 0.2, 0],
+      },
+      greenLineChart: {
+        extraOptions: chartConfigs.greenChartOptions,
+        chartData: {
+          labels: ["JUL", "AUG", "SEP", "OCT", "NOV"],
+          datasets: [
+            {
               label: "My First dataset",
               fill: true,
               borderColor: config.colors.danger,
@@ -203,23 +277,29 @@
               borderDash: [],
               borderDashOffset: 0.0,
               pointBackgroundColor: config.colors.danger,
-              pointBorderColor: 'rgba(255,255,255,0)',
+              pointBorderColor: "rgba(255,255,255,0)",
               pointHoverBackgroundColor: config.colors.danger,
               pointBorderWidth: 20,
               pointHoverRadius: 4,
               pointHoverBorderWidth: 15,
               pointRadius: 4,
               data: [90, 27, 60, 12, 80],
-            }]
-          },
-          gradientColors: ['rgba(66,134,121,0.15)', 'rgba(66,134,121,0.0)', 'rgba(66,134,121,0)'],
-          gradientStops: [1, 0.4, 0],
+            },
+          ],
         },
-        blueBarChart: {
-          extraOptions: chartConfigs.barChartOptions,
-          chartData: {
-            labels: ['USA', 'GER', 'AUS', 'UK', 'RO', 'BR'],
-            datasets: [{
+        gradientColors: [
+          "rgba(66,134,121,0.15)",
+          "rgba(66,134,121,0.0)",
+          "rgba(66,134,121,0)",
+        ],
+        gradientStops: [1, 0.4, 0],
+      },
+      blueBarChart: {
+        extraOptions: chartConfigs.barChartOptions,
+        chartData: {
+          labels: ["USA", "GER", "AUS", "UK", "RO", "BR"],
+          datasets: [
+            {
               label: "Countries",
               fill: true,
               borderColor: config.colors.info,
@@ -227,64 +307,101 @@
               borderDash: [],
               borderDashOffset: 0.0,
               data: [53, 20, 10, 80, 100, 45],
-            }]
-          },
-          gradientColors: config.colors.primaryGradient,
-          gradientStops: [1, 0.4, 0],
-        }
-      }
-    },
-    computed: {
-      enableRTL() {
-        return this.$route.query.enableRTL;
+            },
+          ],
+        },
+        gradientColors: config.colors.primaryGradient,
+        gradientStops: [1, 0.4, 0],
       },
-      isRTL() {
-        return this.$rtl.isRTL;
-      },
-      bigLineChartCategories() {
-        return this.$t('dashboard.chartCategories');
-      }
+    };
+  },
+  computed: {
+    enableRTL() {
+      return this.$route.query.enableRTL;
     },
-    methods: {
-      initBigChart(index) {
-        let chartData = {
-          datasets: [{
+    isRTL() {
+      return this.$rtl.isRTL;
+    },
+    bigLineChartCategories() {
+      return this.$t("dashboard.chartCategories");
+    },
+  },
+
+  methods: {
+    getData(){
+        var id = this.option.country.slice(0,this.option.country.indexOf('.'))
+      
+    },
+    initBigChart(index) {
+      let chartData = {
+        datasets: [
+          {
             fill: true,
             borderColor: config.colors.primary,
             borderWidth: 2,
             borderDash: [],
             borderDashOffset: 0.0,
             pointBackgroundColor: config.colors.primary,
-            pointBorderColor: 'rgba(255,255,255,0)',
+            pointBorderColor: "rgba(255,255,255,0)",
             pointHoverBackgroundColor: config.colors.primary,
             pointBorderWidth: 20,
             pointHoverRadius: 4,
             pointHoverBorderWidth: 15,
             pointRadius: 4,
-            data: this.bigLineChart.allData[index]
-          }],
-          labels: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
-        }
-        this.$refs.bigChart.updateGradients(chartData);
-        this.bigLineChart.chartData = chartData;
-        this.bigLineChart.activeIndex = index;
-      }
+            data: this.bigLineChart.allData[index],
+          },
+        ],
+        labels: [
+          "JAN",
+          "FEB",
+          "MAR",
+          "APR",
+          "MAY",
+          "JUN",
+          "JUL",
+          "AUG",
+          "SEP",
+          "OCT",
+          "NOV",
+          "DEC",
+        ],
+      };
+      this.$refs.bigChart.updateGradients(chartData);
+      this.bigLineChart.chartData = chartData;
+      this.bigLineChart.activeIndex = index;
     },
-    mounted() {
-      this.i18n = this.$i18n;
-      if (this.enableRTL) {
-        this.i18n.locale = 'ar';
-        this.$rtl.enableRTL();
-      }
-      this.initBigChart(0);
+    loadTotal() {},
+    loadMonthByCountry(country, start, end){
+
     },
-    beforeDestroy() {
-      if (this.$rtl.isRTL) {
-        this.i18n.locale = 'en';
-        this.$rtl.disableRTL();
-      }
+  },
+  mounted() {
+    this.i18n = this.$i18n;
+    if (this.enableRTL) {
+      this.i18n.locale = "ar";
+      this.$rtl.enableRTL();
     }
-  };
+    this.initBigChart(0);
+      axios.get("https://api.covid19api.com/summary").then((res) => {
+        this.vietnam = res.data.Countries[181];
+    });
+    axios.get("https://api.covid19api.com/countries").then((res) => {
+      // var val = res.data;
+      // val.sort((x,y)=>
+      //    x.Country < y.Country
+      // );
+      this.countries = res.data;
+      this.bigData = res.data;
+      // this.vietnam = res.data.Countries[]
+    });
+  },
+  beforeDestroy() {
+    if (this.$rtl.isRTL) {
+      this.i18n.locale = "en";
+      this.$rtl.disableRTL();
+    }
+  },
+};
 </script>
 <style>
 </style>
