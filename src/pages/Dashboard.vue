@@ -12,7 +12,8 @@
               aria-describedby="addon-right addon-left"
               placeholder="Chọn quốc gia"
               class="form-control"
-            @change="getData()"
+              
+            @change="getData($event, null)"
             />
             <datalist id="selectCountry">
               <option v-for="(country,index) in countries" :key="index" :value="index + '. ' + country.Country"></option>
@@ -29,6 +30,7 @@
               aria-describedby="addon-right addon-left"
               placeholder="Chọn thời gian xem"
               class="form-control"
+                @change="getData(null, $event)"
             />
             <datalist id="selectTime">
               <option v-for="(option,index) in optionTime" :key="index" :value="option" ></option>
@@ -328,9 +330,24 @@ export default {
   },
 
   methods: {
-    getData(){
-        var id = this.option.country.slice(0,this.option.country.indexOf('.'))
-      
+    getData(e1, e2){
+      if(e1)
+      this.option.country = e1.target.value.slice(0,e1.target.value.indexOf('.'));
+      if(e2)
+        this.option.time = e2.target.value
+    var country = this.countries[parseInt(this.option.country)-1].Slug;
+  var d = new Date();
+  var now = d.getFullYear() + "-" + (d.getMonth()+1) +"-" + (d.getDate()-1) + "T00:00:00Z";
+  switch(this.option.time){
+    case "Toàn bộ":{
+      var api = "https://api.covid19api.com/country/"+ country + "?from=2020-01-01T00:00:00Z&to=" + now;
+      axios.get(api).then(res=>{
+        console.log(res.data);
+      })
+    }
+  }
+
+
     },
     initBigChart(index) {
       let chartData = {
@@ -372,7 +389,6 @@ export default {
     },
     loadTotal() {},
     loadMonthByCountry(country, start, end){
-
     },
   },
   mounted() {
