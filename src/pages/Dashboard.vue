@@ -1,7 +1,6 @@
 <template>
   <div>
-    <div class="row">
-    </div>
+    <div class="row"></div>
     <div class="row">
       <div class="col-md-3">
         <div class="form-group">
@@ -12,11 +11,14 @@
               aria-describedby="addon-right addon-left"
               placeholder="Chọn quốc gia"
               class="form-control"
-              
-            @change="getData($event, null)"
+              @change="getData($event, null)"
             />
             <datalist id="selectCountry">
-              <option v-for="(country,index) in countries" :key="index" :value="index + '. ' + country.Country"></option>
+              <option
+                v-for="(country,index) in countries"
+                :key="index"
+                :value="(index+1) + '. ' + country.Country"
+              ></option>
             </datalist>
           </form>
         </div>
@@ -30,13 +32,18 @@
               aria-describedby="addon-right addon-left"
               placeholder="Chọn thời gian xem"
               class="form-control"
-                @change="getData(null, $event)"
+              @change="getData(null, $event)"
             />
             <datalist id="selectTime">
-              <option v-for="(option,index) in optionTime" :key="index" :value="option" ></option>
+              <option v-for="(option,index) in optionTime" :key="index" :value="option"></option>
             </datalist>
           </form>
         </div>
+      </div>
+      <div class="col-md-6">
+        <h4
+          class="title"
+        >Ngày hôm nay trên {{option.country== "0"? "thế giới": countries[parseInt(option.country)-1].Country}} :</h4>
       </div>
     </div>
     <div class="row">
@@ -63,7 +70,7 @@
                   >
                     <input
                       type="radio"
-                      @click="initBigChart(index)"
+                      @click="initBigChart(index, bigLineChart.chartData.labels)"
                       name="options"
                       autocomplete="off"
                       :checked="bigLineChart.activeIndex === index"
@@ -198,18 +205,12 @@ export default {
   data() {
     return {
       countries: [],
-      vietnam: {
-      },
+      vietnam: {},
       option: {
-        country: "world",
-        time: "Toàn bộ"
+        country: "0",
+        time: "Toàn bộ",
       },
-      optionTime:[
-        "Toàn bộ",
-        "Tuần này",
-        "Tháng này",
-        
-      ],
+      optionTime: ["Toàn bộ", "Tuần này", "Tháng này"],
       bigLineChart: {
         allData: [
           [100, 70, 90, 70, 85, 60, 75, 60, 90, 80, 110, 100],
@@ -330,26 +331,74 @@ export default {
   },
 
   methods: {
-    getData(e1, e2){
-      if(e1)
-      this.option.country = e1.target.value.slice(0,e1.target.value.indexOf('.'));
-      if(e2)
-        this.option.time = e2.target.value
-    var country = this.countries[parseInt(this.option.country)-1].Slug;
-  var d = new Date();
-  var now = d.getFullYear() + "-" + (d.getMonth()+1) +"-" + (d.getDate()-1) + "T00:00:00Z";
-  switch(this.option.time){
-    case "Toàn bộ":{
-      var api = "https://api.covid19api.com/country/"+ country + "?from=2020-01-01T00:00:00Z&to=" + now;
-      axios.get(api).then(res=>{
-        console.log(res.data);
-      })
-    }
-  }
-
-
+    getData(e1, e2) {
+      if (e1)
+        this.option.country = e1.target.value.slice(
+          0,
+          e1.target.value.indexOf(".")
+        );
+      if (e2) this.option.time = e2.target.value;
+      var country = this.countries[parseInt(this.option.country) - 1].Slug;
+      var d = new Date();
+      var now =
+        d.getFullYear() +
+        "-" +
+        (d.getMonth() + 1) +
+        "-" +
+        (d.getDate()) +
+        "T00:00:00Z";
+      switch (this.option.time) {
+        case "Toàn bộ": {
+          var api =
+            "https://api.covid19api.com/country/" +
+            country +
+            "?from=2020-01-01T00:00:00Z&to=" +
+            now;
+            // console.log(api);
+          axios.get(api).then((res) => {
+            var arrayVal = new Array();
+            arrayVal[0] = new Array();
+            arrayVal[1] = new Array();
+            arrayVal[2] = new Array();
+            arrayVal[3] = new Array();
+            const monthNames = [
+              "Jan",
+              "Feb",
+              "Mar",
+              "Apr",
+              "May",
+              "Jun",
+              "Jul",
+              "Aug",
+              "Sep",
+              "Oct",
+              "Nov",
+              "Dec",
+            ];
+            var labels = [];
+            var i = 0;
+            for (var obj of res.data) {
+              i++;
+              var ndate = new Date(obj.Date);
+              var lDay = new Date(ndate.getFullYear(), ndate.getMonth() + 1, 0);
+              if (ndate.getDate() == lDay.getDate() || i == res.data.length) {
+                // if(i == res.data.length)
+                labels.push(monthNames[ndate.getMonth()]);
+                arrayVal[0].push(obj.Confirmed);
+                arrayVal[1].push(obj.Active);
+                arrayVal[2].push(obj.Deaths);
+                arrayVal[3].push(obj.Recovered);
+              }
+            }
+             this.bigLineChart.chartData.labels = labels;
+            this.bigLineChart.allData = arrayVal;
+     this.$refs.bigChart.updateGradients(this.chartData);
+            this.initBigChart(0, labels);
+          });
+        }
+      }
     },
-    initBigChart(index) {
+    initBigChart(index, lab) {
       let chartData = {
         datasets: [
           {
@@ -368,7 +417,22 @@ export default {
             data: this.bigLineChart.allData[index],
           },
         ],
-        labels: [
+        labels: lab,
+      };
+      this.$refs.bigChart.updateGradients(chartData);
+      this.bigLineChart.chartData = chartData;
+      this.bigLineChart.activeIndex = index;
+    },
+    loadTotal() {},
+    loadMonthByCountry(country, start, end) {},
+  },
+  mounted() {
+    this.i18n = this.$i18n;
+    if (this.enableRTL) {
+      this.i18n.locale = "ar";
+      this.$rtl.enableRTL();
+    }
+    this.initBigChart(0, [
           "JAN",
           "FEB",
           "MAR",
@@ -381,33 +445,20 @@ export default {
           "OCT",
           "NOV",
           "DEC",
-        ],
-      };
-      this.$refs.bigChart.updateGradients(chartData);
-      this.bigLineChart.chartData = chartData;
-      this.bigLineChart.activeIndex = index;
-    },
-    loadTotal() {},
-    loadMonthByCountry(country, start, end){
-    },
-  },
-  mounted() {
-    this.i18n = this.$i18n;
-    if (this.enableRTL) {
-      this.i18n.locale = "ar";
-      this.$rtl.enableRTL();
-    }
-    this.initBigChart(0);
-      axios.get("https://api.covid19api.com/summary").then((res) => {
-        this.vietnam = res.data.Countries[181];
+        ]);
+    axios.get("https://api.covid19api.com/summary").then((res) => {
+      this.vietnam = res.data.Countries[181];
     });
     axios.get("https://api.covid19api.com/countries").then((res) => {
-      // var val = res.data;
-      // val.sort((x,y)=>
-      //    x.Country < y.Country
-      // );
-      this.countries = res.data;
-      this.bigData = res.data;
+      var val = res.data;
+      val.sort(function (x, y) {
+        if (x.Slug > y.Slug) return 1;
+        if (x.Slug < y.Slug) return -1;
+        return 0;
+      });
+
+      this.countries = val;
+      // this.bigData = res.data;
       // this.vietnam = res.data.Countries[]
     });
   },
