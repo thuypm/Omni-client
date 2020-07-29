@@ -75,7 +75,7 @@
                       autocomplete="off"
                       :checked="bigLineChart.activeIndex === index"
                     />
-                    {{option}}
+                    {{option + " " + bigLineChart.allData[index][bigLineChart.allData[index].length-1]}} 
                   </label>
                 </div>
               </div>
@@ -212,6 +212,7 @@ export default {
       },
       optionTime: ["Toàn bộ", "Tuần này", "Tháng này"],
       bigLineChart: {
+        totals: [],
         allData: [
           [100, 70, 90, 70, 85, 60, 75, 60, 90, 80, 110, 100],
           [80, 120, 105, 110, 95, 105, 90, 100, 80, 95, 70, 120],
@@ -345,7 +346,7 @@ export default {
         "-" +
         (d.getMonth() + 1) +
         "-" +
-        (d.getDate()) +
+        d.getDate() +
         "T00:00:00Z";
       switch (this.option.time) {
         case "Toàn bộ": {
@@ -354,13 +355,14 @@ export default {
             country +
             "?from=2020-01-01T00:00:00Z&to=" +
             now;
-            // console.log(api);
+          // console.log(api);
           axios.get(api).then((res) => {
             var arrayVal = new Array();
             arrayVal[0] = new Array();
             arrayVal[1] = new Array();
             arrayVal[2] = new Array();
             arrayVal[3] = new Array();
+
             const monthNames = [
               "Jan",
               "Feb",
@@ -390,11 +392,15 @@ export default {
                 arrayVal[3].push(obj.Recovered);
               }
             }
-             this.bigLineChart.chartData.labels = labels;
+            this.bigLineChart.chartData.labels = labels;
             this.bigLineChart.allData = arrayVal;
-     this.$refs.bigChart.updateGradients(this.chartData);
+            this.$refs.bigChart.updateGradients(this.chartData);
             this.initBigChart(0, labels);
           });
+          break;
+        }
+        case "Tháng này": {
+          
         }
       }
     },
@@ -433,19 +439,19 @@ export default {
       this.$rtl.enableRTL();
     }
     this.initBigChart(0, [
-          "JAN",
-          "FEB",
-          "MAR",
-          "APR",
-          "MAY",
-          "JUN",
-          "JUL",
-          "AUG",
-          "SEP",
-          "OCT",
-          "NOV",
-          "DEC",
-        ]);
+      "JAN",
+      "FEB",
+      "MAR",
+      "APR",
+      "MAY",
+      "JUN",
+      "JUL",
+      "AUG",
+      "SEP",
+      "OCT",
+      "NOV",
+      "DEC",
+    ]);
     axios.get("https://api.covid19api.com/summary").then((res) => {
       this.vietnam = res.data.Countries[181];
     });
