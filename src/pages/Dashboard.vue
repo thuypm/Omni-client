@@ -151,7 +151,7 @@
         </card>
       </div>
     </div>
-    <div class="row">
+    <!-- <div class="row">
       <div class="col-lg-6 col-md-12">
         <card type="tasks" :header-classes="{'text-right': isRTL}">
           <template slot="header">
@@ -183,6 +183,9 @@
           </div>
         </card>
       </div>
+    </div> --> <!-- 2 cái bảng phụ  -->
+    <div class="row">
+      
     </div>
   </div>
 </template>

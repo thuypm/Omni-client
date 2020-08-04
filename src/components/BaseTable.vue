@@ -3,7 +3,11 @@
     <thead :class="theadClasses">
     <tr>
       <slot name="columns">
-        <th v-for="column in columnName" :key="column">{{column}}</th>
+        <th v-for="(column, id) in columnName" :key="id" @click="sortBy(id, column)"> {{column}} <i class="fa  " :class="{
+          'fa-arrow-up' : sort == 1 &&  idSort == id,
+          'fa-arrow-down' : sort == 0 &&  idSort == id,
+          'fa-arrows-alt-v' : sort == -1 || idSort != id,
+        }" style=""></i></th>
       </slot>
     </tr>
     </thead>
@@ -55,20 +59,46 @@
         description: "<tbody> css classes"
       }
     },
+    data(){
+        return{
+          sort: -1,
+          idSort: -1,
+
+        }
+    },
     computed: {
       tableClass() {
         return this.type && `table-${this.type}`;
       }
     },
+    mounted(){
+
+    },
     methods: {
+
+      sortBy(id, col)
+      {
+        if(this.idSort == id)
+          this.sort = !this.sort;
+        else
+          {
+            this.sort = 1;
+            this.idSort = id;
+          }
+      //  console.log(this.sort +" "+ this.idSort)
+      },
       hasValue(item, column) {
-        return item[column.toLowerCase()] !== "undefined";
+        return item[column] !== "undefined";
       },
       itemValue(item, column) {
-        return item[column.toLowerCase()];
+        return item[column];
       }
     }
   };
 </script>
 <style>
+.table > thead > tr > th:hover {
+  cursor: pointer;
+   /* color:yellow  */
+}
 </style>
