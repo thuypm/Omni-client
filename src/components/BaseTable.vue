@@ -3,7 +3,7 @@
     <thead :class="theadClasses">
     <tr>
       <slot name="columns">
-        <th v-for="(column, id) in columnName" :key="id" @click="sortBy(id, column)"> {{column}} <i class="fa  " :class="{
+        <th v-for="(column, id) in columnName" :key="id" @click="sortBy(id, column)"> {{column}} <i class="fa fa-fw " :class="{
           'fa-arrow-up' : sort == 1 &&  idSort == id,
           'fa-arrow-down' : sort == 0 &&  idSort == id,
           'fa-arrows-alt-v' : sort == -1 || idSort != id,

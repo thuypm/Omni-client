@@ -7,7 +7,11 @@
           :name="$t('sidebar.dashboard')"
           icon="tim-icons icon-chart-pie-36"
         />
-
+ <sidebar-link
+          to="/table-list"
+          :name="$t('sidebar.tableList')"
+          icon="tim-icons icon-puzzle-10"
+        />
         <sidebar-link
           to="/notifications"
           :name="$t('sidebar.notifications')"
@@ -19,11 +23,7 @@
           icon="tim-icons icon-single-02"
         />
 
-        <sidebar-link
-          to="/table-list"
-          :name="$t('sidebar.tableList')"
-          icon="tim-icons icon-puzzle-10"
-        />
+       
         <!--  <sidebar-link to="/icons" :name="$t('sidebar.icons')" icon="tim-icons icon-atom" />
       
         <sidebar-link to="/maps" :name="$t('sidebar.maps')" icon="tim-icons icon-pin" />
