@@ -3,7 +3,7 @@
     "completedTasks": "Completed Tasks",
     "dailySales": "Daily Sales",
     "performance": "Tổng quan",
-    "simpleTable": "Simple Table",
+    "simpleTable": "Bảng xếp hạng",
     "totalShipments": "Trên toàn cầu",
     "chartCategories": [
       "Tổng số ca nhiễm",
@@ -19,7 +19,7 @@
       "somethingElse": "Something else"
     },
     "usersTable": {
-      "title": "Simple Table",
+      "title": "Bảng xếp hạng",
       "columns": [
         "Name",
         "Country",

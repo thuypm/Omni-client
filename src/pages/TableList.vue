@@ -1,4 +1,5 @@
 <template>
+<div>
   <div class="row">
     <div class="col-12">
       <card :title="table1.title">
@@ -11,20 +12,27 @@
           ></base-table>
         </div>
       </card>
+    </div>  </div>
+<div class="row">
+    <div class="col-9">
+       <highcharts :constructorType="'mapChart'" class="hc" :options="chartOptions" ref="chart"></highcharts>
+        
+    </div>
+    <div class="col-3">
+      <highcharts class="hc" :options="{}" ref="chart"></highcharts>
     </div>
 
-    <div class="col-12">
-       <highcharts :constructorType="'mapChart'" class="hc" :options="chartOptions" ref="chart"></highcharts>
-    </div>
+  </div>
   </div>
 </template>
 <script>
 import { BaseTable } from "@/components";
 
-// import Highcharts from 'highcharts'
+import Highcharts from 'highcharts'
 
 import worldMap from '@highcharts/map-collection/custom/world.geo.json'
-
+import exportingInit from 'highcharts/modules/exporting'
+// exportingInit(Highcharts)
 const tableColumns = ["Country", "Confirmed", "Deaths", "Recovered", "Active"];
 const columnName = [
   "Quốc gia",
@@ -87,7 +95,7 @@ export default {
           min: 0
         },
         series: [{
-          name: 'Random data',
+          name: 'Số ca nhiễm hiện tại',
           allowPointSelect: true,
                 cursor: 'pointer',
           states: {
@@ -322,7 +330,7 @@ export default {
 
 
       table1: {
-        title: "Simple Table",
+        title: "Bảng xếp hạng",
         columns: [...tableColumns],
         columnName: [...columnName],
         data: [...tableData],
