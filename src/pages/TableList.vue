@@ -1,45 +1,51 @@
 <template>
-<div>
-  <div class="row">
-    <div class="col-12">
-      <card :title="table1.title">
-        <div class="table-responsive">
-          <base-table
-            :data="table1.data"
-            :columns="table1.columns"
-            :columnName="table1.columnName"
-            thead-classes="text-primary"
-          ></base-table>
-        </div>
-      </card>
-    </div>  </div>
-<div class="row">
-    <div class="col-9">
-       <highcharts :constructorType="'mapChart'" class="hc" :options="chartOptions" ref="chart"></highcharts>
-        
+  <div>
+    <div class="row">
+      <div class="col-12">
+        <card :title="table1.title">
+          <div class="table-responsive" style="max-height:250px">
+            <base-table
+              :data="table1.data"
+              :columns="table1.columns"
+              :columnName="table1.columnName"
+              thead-classes="text-primary"
+              @sort="sortTable"
+            ></base-table>
+          </div>
+        </card>
+      </div>
     </div>
-    <div class="col-3">
-      <highcharts class="hc" :options="{}" ref="chart"></highcharts>
+    <div class="row">
+      <div class="col-9">
+        <highcharts :constructorType="'mapChart'" class="hc" :options="mapOptions" ref="chart"></highcharts>
+      </div>
+      <div class="col-3">
+        <highcharts class="hc" :options="chartOption" ref="chart"></highcharts>
+      </div>
     </div>
-
-  </div>
   </div>
 </template>
 <script>
 import { BaseTable } from "@/components";
 
-import Highcharts from 'highcharts'
-
-import worldMap from '@highcharts/map-collection/custom/world.geo.json'
-import exportingInit from 'highcharts/modules/exporting'
+import Highcharts from "highcharts";
+import axios from "axios";
+import worldMap from "@highcharts/map-collection/custom/world.geo.json";
+import exportingInit from "highcharts/modules/exporting";
 // exportingInit(Highcharts)
-const tableColumns = ["Country", "Confirmed", "Deaths", "Recovered", "Active"];
+const tableColumns = [
+  "Country",
+  "TotalConfirmed",
+  "NewConfirmed",
+  "NewDeaths",
+  "TotalRecovered",
+];
 const columnName = [
   "Quốc gia",
-  "Số ca mắc",
+  "Tổng số ca mắc",
+  "số ca mới",
   "Tử vong",
   "Đang điều trị",
-  "Khỏi bệnh",
 ];
 const tableData = [
   {
@@ -71,277 +77,285 @@ const tableData = [
 export default {
   components: {
     BaseTable,
-
+  },
+  methods: {
+    selectCountry(e) {
+      // console.log(e);
+      var vt = this.allData.find(function (val) {
+        return val.CountryCode.toLowerCase() == e.point["hc-key"];
+      });
+      var d = new Date();
+      var d2 = d.toISOString();
+      var now = d2.slice(0, d2.indexOf("T")) + "T00:00:00Z";
+      var api =
+        "https://api.covid19api.com/country/" +
+        vt.Slug +
+        "?from=2020-01-01T00:00:00Z&to=" +
+        now;
+      // console.log(api);
+      axios.get(api).then((res) => {
+        var arrayVal = new Array();
+        arrayVal[0] = new Array();
+        arrayVal[1] = new Array();
+        arrayVal[2] = new Array();
+        arrayVal[3] = new Array();
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        var labels = [];
+        var i = 0;
+        var dayTmp = "";
+        for (var obj of res.data) {
+          i++;
+          var ndate = new Date(obj.Date);
+          var lDay = new Date(ndate.getFullYear(), ndate.getMonth() + 1, 0);
+          if (
+            ndate.getDate() == lDay.getDate() ||
+            (res.data[res.data.length - 1].Date == obj.Date &&
+              ndate.getDate() != lDay.getDate())
+          ) {
+            if (obj.Date != dayTmp) {
+              dayTmp = obj.Date;
+              labels.push(monthNames[ndate.getMonth()]);
+              // console.log(monthNames[ndate.getMonth()]);
+              arrayVal[0].push(obj.Confirmed);
+              arrayVal[3].push(obj.Active);
+              arrayVal[2].push(obj.Deaths);
+              arrayVal[1].push(obj.Recovered);
+            } else {
+              var ls = arrayVal[0].length - 1;
+              arrayVal[0][ls] += obj.Confirmed;
+              arrayVal[3][ls] += obj.Active;
+              arrayVal[2][ls] += obj.Deaths;
+              arrayVal[1][ls] += obj.Recovered;
+            }
+          }
+        };
+        var yTitle = this.table1.columnName[this.selectColumnIndex+1];
+        this.chartOption.yAxis = {
+          title:{
+              text: yTitle
+          }
+        }
+        if (e.shiftKey == true) {
+          this.chartOption.xAxis = {
+            categories: labels,
+          };
+          this.chartOption.series.push({
+            name: vt.Country,
+            data: arrayVal[this.selectColumnIndex],
+          });
+        } else {
+          this.chartOption.xAxis = {
+            categories: labels,
+          };
+          this.chartOption.series = [{
+            name: vt.Country,
+            data: arrayVal[this.selectColumnIndex],
+          }];
+        }
+      });
+    },
+    sortTable(dataSort) {
+      this.selectColumnIndex = col;
+      if (
+        this.table1.columns[dataSort.col] != this.mapOptions.series.name &&
+        dataSort.col != 0
+      ) {
+        var dataMapChart = [];
+        for (let obj of this.table1.data)
+          dataMapChart.push([
+            obj.CountryCode.toLowerCase(),
+            obj[this.table1.columns[dataSort.col]],
+          ]);
+        this.mapOptions.series = {
+          name: this.table1.columnName[dataSort.col],
+          allowPointSelect: true,
+          cursor: "pointer",
+          states: {
+            select: {
+              color: "#a4edba",
+              borderColor: "black",
+              dashStyle: "shortdot",
+            },
+          },
+          dataLabels: {
+            enabled: true,
+            format: "{point.name}",
+          },
+          allAreas: false,
+          data: dataMapChart,
+        };
+      }
+      var columns = this.table1.columns;
+      if (dataSort.option == 1) {
+        this.table1.data.sort(function (x, y) {
+          if (x[columns[dataSort.col]] > y[columns[dataSort.col]]) return 1;
+          if (x[columns[dataSort.col]] < y[columns[dataSort.col]]) return -1;
+          return 0;
+        });
+      } else {
+        this.table1.data.sort(function (x, y) {
+          if (x[columns[dataSort.col]] < y[columns[dataSort.col]]) return 1;
+          if (x[columns[dataSort.col]] > y[columns[dataSort.col]]) return -1;
+          return 0;
+        });
+      }
+    },
   },
   data() {
+    var _this = this;
     return {
-      chartOptions: {
+      selectColumnIndex: 0,
+      chartOption: {
         chart: {
-          map: worldMap
+          type: "spline",
         },
         title: {
-          text: 'Bản đồ dịch trên toàn thế giới'
+          text: "Chi tiết",
         },
         subtitle: {
-          text: 'Không biết ghi cái gì ở đây cả'
+          text: "ấn shift+ click để so sánh",
+        },
+        xAxis: {
+          categories: [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ],
+        },
+        yAxis: {
+          title: {
+            text: "Số ca đang điều trị",
+          },
+          labels: {
+            formatter: function () {
+              return this.value + "";
+            },
+          },
+        },
+        tooltip: {
+          crosshairs: true,
+          shared: true,
+        },
+        plotOptions: {
+          spline: {
+            marker: {
+              radius: 4,
+              lineColor: "#666666",
+              lineWidth: 1,
+            },
+          },
+        },
+        series: [
+         
+        ],
+      },
+      mapOptions: {
+        chart: {
+          map: worldMap,
+        },
+        title: {
+          text: "Bản đồ dịch trên toàn thế giới",
+        },
+        subtitle: {
+          text: "Không biết ghi cái gì ở đây cả",
         },
         mapNavigation: {
           enabled: true,
           buttonOptions: {
-            alignTo: 'spacingBox'
-          }
+            alignTo: "spacingBox",
+          },
         },
         colorAxis: {
-          min: 0
+          min: 0,
         },
-        series: [{
-          name: 'Số ca nhiễm hiện tại',
-          allowPointSelect: true,
-                cursor: 'pointer',
-          states: {
-                    select: {
-                        color: '#a4edba',
-                        borderColor: 'black',
-                        dashStyle: 'shortdot'
-                    }
-                },
-          dataLabels: {
-            enabled: true,
-            format: '{point.name}'
+        plotOptions: {
+          series: {
+            events: {
+              click: function (e) {
+                _this.selectCountry(e);
+              },
+            },
           },
-          allAreas: false,
-          data: [
-            ['fo', 0],
-            ['um', 1],
-            ['us', 2],
-            ['jp', 3],
-            ['sc', 4],
-            ['in', 5],
-            ['fr', 6],
-            ['fm', 7],
-            ['cn', 8],
-            ['pt', 9],
-            ['sw', 10],
-            ['sh', 11],
-            ['br', 12],
-            ['ki', 13],
-            ['ph', 14],
-            ['mx', 15],
-            ['es', 16],
-            ['bu', 17],
-            ['mv', 18],
-            ['sp', 19],
-            ['gb', 20],
-            ['gr', 21],
-            ['as', 22],
-            ['dk', 23],
-            ['gl', 24],
-            ['gu', 25],
-            ['mp', 26],
-            ['pr', 27],
-            ['vi', 28],
-            ['ca', 29],
-            ['st', 30],
-            ['cv', 31],
-            ['dm', 32],
-            ['nl', 33],
-            ['jm', 34],
-            ['ws', 35],
-            ['om', 36],
-            ['vc', 37],
-            ['tr', 38],
-            ['bd', 39],
-            ['lc', 40],
-            ['nr', 41],
-            ['no', 42],
-            ['kn', 43],
-            ['bh', 44],
-            ['to', 45],
-            ['fi', 46],
-            ['id', 47],
-            ['mu', 48],
-            ['se', 49],
-            ['tt', 50],
-            ['my', 51],
-            ['pa', 52],
-            ['pw', 53],
-            ['tv', 54],
-            ['mh', 55],
-            ['cl', 56],
-            ['th', 57],
-            ['gd', 58],
-            ['ee', 59],
-            ['ag', 60],
-            ['tw', 61],
-            ['bb', 62],
-            ['it', 63],
-            ['mt', 64],
-            ['vu', 65],
-            ['sg', 66],
-            ['cy', 67],
-            ['lk', 68],
-            ['km', 69],
-            ['fj', 70],
-            ['ru', 71],
-            ['va', 72],
-            ['sm', 73],
-            ['kz', 74],
-            ['az', 75],
-            ['tj', 76],
-            ['ls', 77],
-            ['uz', 78],
-            ['ma', 79],
-            ['co', 80],
-            ['tl', 81],
-            ['tz', 82],
-            ['ar', 83],
-            ['sa', 84],
-            ['pk', 85],
-            ['ye', 86],
-            ['ae', 87],
-            ['ke', 88],
-            ['pe', 89],
-            ['do', 90],
-            ['ht', 91],
-            ['pg', 92],
-            ['ao', 93],
-            ['kh', 94],
-            ['vn', 95],
-            ['mz', 96],
-            ['cr', 97],
-            ['bj', 98],
-            ['ng', 99],
-            ['ir', 100],
-            ['sv', 101],
-            ['sl', 102],
-            ['gw', 103],
-            ['hr', 104],
-            ['bz', 105],
-            ['za', 106],
-            ['cf', 107],
-            ['sd', 108],
-            ['cd', 109],
-            ['kw', 110],
-            ['de', 111],
-            ['be', 112],
-            ['ie', 113],
-            ['kp', 114],
-            ['kr', 115],
-            ['gy', 116],
-            ['hn', 117],
-            ['mm', 118],
-            ['ga', 119],
-            ['gq', 120],
-            ['ni', 121],
-            ['lv', 122],
-            ['ug', 123],
-            ['mw', 124],
-            ['am', 125],
-            ['sx', 126],
-            ['tm', 127],
-            ['zm', 128],
-            ['nc', 129],
-            ['mr', 130],
-            ['dz', 131],
-            ['lt', 132],
-            ['et', 133],
-            ['er', 134],
-            ['gh', 135],
-            ['si', 136],
-            ['gt', 137],
-            ['ba', 138],
-            ['jo', 139],
-            ['sy', 140],
-            ['mc', 141],
-            ['al', 142],
-            ['uy', 143],
-            ['cnm', 144],
-            ['mn', 145],
-            ['rw', 146],
-            ['so', 147],
-            ['bo', 148],
-            ['cm', 149],
-            ['cg', 150],
-            ['eh', 151],
-            ['rs', 152],
-            ['me', 153],
-            ['tg', 154],
-            ['la', 155],
-            ['af', 156],
-            ['ua', 157],
-            ['sk', 158],
-            ['jk', 159],
-            ['bg', 160],
-            ['qa', 161],
-            ['li', 162],
-            ['at', 163],
-            ['sz', 164],
-            ['hu', 165],
-            ['ro', 166],
-            ['ne', 167],
-            ['lu', 168],
-            ['ad', 169],
-            ['ci', 170],
-            ['lr', 171],
-            ['bn', 172],
-            ['iq', 173],
-            ['ge', 174],
-            ['gm', 175],
-            ['ch', 176],
-            ['td', 177],
-            ['kv', 178],
-            ['lb', 179],
-            ['dj', 180],
-            ['bi', 181],
-            ['sr', 182],
-            ['il', 183],
-            ['ml', 184],
-            ['sn', 185],
-            ['gn', 186],
-            ['zw', 187],
-            ['pl', 188],
-            ['mk', 189],
-            ['py', 190],
-            ['by', 191],
-            ['cz', 192],
-            ['bf', 193],
-            ['na', 194],
-            ['ly', 195],
-            ['tn', 196],
-            ['bt', 197],
-            ['md', 198],
-            ['ss', 199],
-            ['bw', 200],
-            ['bs', 201],
-            ['nz', 202],
-            ['cu', 203],
-            ['ec', 204],
-            ['au', 205],
-            ['ve', 206],
-            ['sb', 207],
-            ['mg', 208],
-            ['is', 209],
-            ['eg', 210],
-            ['kg', 211],
-            ['np', 212]
-          ]
-        }]
+        },
+        series: [
+          {
+            name: "Số ca nhiễm hiện tại",
+            allowPointSelect: true,
+            cursor: "pointer",
+            states: {
+              select: {
+                color: "#a4edba",
+                borderColor: "black",
+                dashStyle: "shortdot",
+              },
+            },
+            dataLabels: {
+              enabled: true,
+              format: "{point.name}",
+            },
+            allAreas: false,
+            data: [],
+          },
+        ],
       },
-
-
+      allData: [],
       table1: {
         title: "Bảng xếp hạng",
         columns: [...tableColumns],
         columnName: [...columnName],
         data: [...tableData],
       },
-      table2: {
-        title: "Table on Plain Background",
-        columns: [...tableColumns],
-        columnName: [...columnName],
-        data: [...tableData],
-      },
     };
+  },
+
+  mounted() {
+    axios.get("https://api.covid19api.com/summary").then((res) => {
+      var dataMapChart = [];
+      this.allData = res.data.Countries;
+      this.table1.data = res.data.Countries;
+      for (let obj of res.data.Countries)
+        dataMapChart.push([obj.CountryCode.toLowerCase(), obj.NewConfirmed]);
+      this.mapOptions.series = {
+        name: "Số ca nhiễm mới",
+        allowPointSelect: true,
+        cursor: "pointer",
+        states: {
+          select: {
+            color: "#a4edba",
+            borderColor: "black",
+            dashStyle: "shortdot",
+          },
+        },
+        dataLabels: {
+          enabled: true,
+          format: "{point.name}",
+        },
+        allAreas: false,
+        data: dataMapChart,
+      };
+    });
   },
 };
 </script>

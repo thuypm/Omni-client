@@ -8,7 +8,7 @@ const Profile = () => import(/* webpackChunkName: "common" */ "@/pages/Profile.v
 const Notifications = () => import(/* webpackChunkName: "common" */"@/pages/Notifications.vue");
 const Icons = () => import(/* webpackChunkName: "common" */ "@/pages/Icons.vue");
 const Maps = () => import(/* webpackChunkName: "common" */ "@/pages/Maps.vue");
-const Typography = () => import(/* webpackChunkName: "common" */ "@/pages/Typography.vue");
+const Guess = () => import(/* webpackChunkName: "common" */ "@/pages/guess.vue");
 const TableList = () => import(/* webpackChunkName: "common" */ "@/pages/TableList.vue");
 const Signin = () => import(/* webpackChunkName: "common" */ "@/pages/Signin.vue");
 
@@ -44,9 +44,9 @@ const routes = [
         component: Maps
       },
       {
-        path: "typography",
-        name: "typography",
-        component: Typography
+        path: "guess",
+        name: "guess",
+        component: Guess
       },
       {
         path: "table-list",

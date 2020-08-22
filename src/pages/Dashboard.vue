@@ -43,7 +43,7 @@
       <div class="col-md-6">
         <h4
           class="title"
-        >Ngày hôm nay trên {{option.country== "0"? "thế giới": countries[parseInt(option.country)-1].Country}} :</h4>
+        >Ngày hôm nay trên {{option.country== "0"? "thế giới": countries[parseInt(option.country)-1].Country}} : {{newCase}} ca mới</h4>
       </div>
     </div>
     <div class="row">
@@ -75,7 +75,7 @@
                       autocomplete="off"
                       :checked="bigLineChart.activeIndex === index"
                     />
-                    {{option + " " + bigLineChart.allData[index][bigLineChart.allData[index].length-1]}} 
+                    {{option + " " + bigLineChart.allData[index][bigLineChart.allData[index].length-1]}}
                   </label>
                 </div>
               </div>
@@ -106,6 +106,7 @@
           <div class="chart-area">
             <line-chart
               style="height: 100%"
+              ref="purpleLineChart"
               chart-id="purple-line-chart"
               :chart-data="purpleLineChart.chartData"
               :gradient-colors="purpleLineChart.gradientColors"
@@ -183,10 +184,9 @@
           </div>
         </card>
       </div>
-    </div> --> <!-- 2 cái bảng phụ  -->
-    <div class="row">
-      
-    </div>
+    </div>-->
+    <!-- 2 cái bảng phụ  -->
+    <div class="row"></div>
   </div>
 </template>
 <script>
@@ -208,6 +208,7 @@ export default {
   data() {
     return {
       countries: [],
+      newCase: 0,
       vietnam: {},
       option: {
         country: "0",
@@ -335,22 +336,32 @@ export default {
   },
 
   methods: {
+    pullData(time) {},
     getData(e1, e2) {
-      if (e1)
+      if (e1) {
         this.option.country = e1.target.value.slice(
           0,
           e1.target.value.indexOf(".")
         );
+        var country = this.countries[parseInt(this.option.country) - 1].Slug;
+        axios
+          .get(
+            "https://api.covid19api.com/dayone/country/" +
+              country +
+              "/status/confirmed"
+          )
+          .then((res) => {
+            this.newCase =
+              res.data[res.data.length - 1].Cases -
+              res.data[res.data.length - 2].Cases;
+          });
+      }
+
       if (e2) this.option.time = e2.target.value;
       var country = this.countries[parseInt(this.option.country) - 1].Slug;
       var d = new Date();
-      var now =
-        d.getFullYear() +
-        "-" +
-        (d.getMonth() + 1) +
-        "-" +
-        d.getDate() +
-        "T00:00:00Z";
+      var d2 = d.toISOString();
+      var now = d2.slice(0, d2.indexOf("T")) + "T00:00:00Z";
       switch (this.option.time) {
         case "Toàn bộ": {
           var api =
@@ -365,7 +376,6 @@ export default {
             arrayVal[1] = new Array();
             arrayVal[2] = new Array();
             arrayVal[3] = new Array();
-
             const monthNames = [
               "Jan",
               "Feb",
@@ -382,17 +392,82 @@ export default {
             ];
             var labels = [];
             var i = 0;
+            var dayTmp = "";
             for (var obj of res.data) {
               i++;
               var ndate = new Date(obj.Date);
               var lDay = new Date(ndate.getFullYear(), ndate.getMonth() + 1, 0);
-              if (ndate.getDate() == lDay.getDate() || i == res.data.length) {
-                // if(i == res.data.length)
-                labels.push(monthNames[ndate.getMonth()]);
-                arrayVal[0].push(obj.Confirmed);
-                arrayVal[1].push(obj.Active);
-                arrayVal[2].push(obj.Deaths);
-                arrayVal[3].push(obj.Recovered);
+              if (
+                ndate.getDate() == lDay.getDate() ||
+                (res.data[res.data.length - 1].Date == obj.Date &&
+                  ndate.getDate() != lDay.getDate())
+              ) {
+                if (obj.Date != dayTmp) {
+                  dayTmp = obj.Date;
+                  labels.push(monthNames[ndate.getMonth()]);
+                  // console.log(monthNames[ndate.getMonth()]);
+                  arrayVal[0].push(obj.Confirmed);
+                  arrayVal[1].push(obj.Active);
+                  arrayVal[2].push(obj.Deaths);
+                  arrayVal[3].push(obj.Recovered);
+                } else {
+                  var ls = arrayVal[0].length - 1;
+                  arrayVal[0][ls] += obj.Confirmed;
+                  arrayVal[1][ls] += obj.Active;
+                  arrayVal[2][ls] += obj.Deaths;
+                  arrayVal[3][ls] += obj.Recovered;
+                }
+              }
+            }
+            this.bigLineChart.chartData.labels = labels;
+            this.bigLineChart.allData = arrayVal;
+            this.$refs.bigChart.updateGradients(this.chartData);
+            this.initBigChart(0, labels);
+          });
+          break;
+        }
+        case "Tuần này": {
+          var lastWeek = new Date(d.getTime() - 604800000).toISOString();
+          var startTime =
+            lastWeek.slice(0, lastWeek.indexOf("T")) + "T00:00:00Z";
+          var api =
+            "https://api.covid19api.com/country/" +
+            country +
+            "?from=" +
+            startTime +
+            "&to=" +
+            now;
+          console.log(api);
+          axios.get(api).then((res) => {
+            var arrayVal = new Array();
+            arrayVal[0] = new Array();
+            arrayVal[1] = new Array();
+            arrayVal[2] = new Array();
+            arrayVal[3] = new Array();
+
+            var labels = [];
+            var i = 0;
+            var dayTmp = "";
+            for (var obj of res.data) {
+              i++;
+              var ndate = new Date(obj.Date);
+              var lDay = new Date(ndate.getFullYear(), ndate.getMonth() + 1, 0);
+              {
+                if (obj.Date != dayTmp) {
+                  dayTmp = obj.Date;
+                  labels.push(obj.Date.slice(0, obj.Date.indexOf("T")));
+                  // console.log(monthNames[ndate.getMonth()]);
+                  arrayVal[0].push(obj.Confirmed);
+                  arrayVal[1].push(obj.Active);
+                  arrayVal[2].push(obj.Deaths);
+                  arrayVal[3].push(obj.Recovered);
+                } else {
+                  var ls = arrayVal[0].length - 1;
+                  arrayVal[0][ls] += obj.Confirmed;
+                  arrayVal[1][ls] += obj.Active;
+                  arrayVal[2][ls] += obj.Deaths;
+                  arrayVal[3][ls] += obj.Recovered;
+                }
               }
             }
             this.bigLineChart.chartData.labels = labels;
@@ -403,7 +478,6 @@ export default {
           break;
         }
         case "Tháng này": {
-          
         }
       }
     },
@@ -432,10 +506,140 @@ export default {
       this.bigLineChart.chartData = chartData;
       this.bigLineChart.activeIndex = index;
     },
-    loadTotal() {},
-    loadMonthByCountry(country, start, end) {},
+    loadMiniChart() {
+      var d = new Date();
+      var d2 = d.toISOString();
+      var now = d2.slice(0, d2.indexOf("T")) + "T00:00:00Z";
+      var api =
+        "https://api.covid19api.com/country/vietnam" +
+        "?from=2020-01-01T00:00:00Z&to=" +
+        now;
+      // console.log(api);
+      axios.get(api).then((res) => {
+        var arrayVal = new Array();
+        arrayVal[0] = new Array();
+        arrayVal[1] = new Array();
+        arrayVal[2] = new Array();
+        arrayVal[3] = new Array();
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        var labels = [];
+        var i = 0;
+        var dayTmp = "";
+        for (var obj of res.data) {
+          i++;
+          var ndate = new Date(obj.Date);
+          var lDay = new Date(ndate.getFullYear(), ndate.getMonth() + 1, 0);
+          if (
+            ndate.getDate() == lDay.getDate() ||
+            (res.data[res.data.length - 1].Date == obj.Date &&
+              ndate.getDate() != lDay.getDate())
+          ) {
+            if (obj.Date != dayTmp) {
+              dayTmp = obj.Date;
+              labels.push(monthNames[ndate.getMonth()]);
+              // console.log(monthNames[ndate.getMonth()]);
+              arrayVal[0].push(obj.Confirmed);
+              arrayVal[1].push(obj.Active);
+              arrayVal[2].push(obj.Deaths);
+              arrayVal[3].push(obj.Recovered);
+            } else {
+              var ls = arrayVal[0].length - 1;
+              arrayVal[0][ls] += obj.Confirmed;
+              arrayVal[1][ls] += obj.Active;
+              arrayVal[2][ls] += obj.Deaths;
+              arrayVal[3][ls] += obj.Recovered;
+            }
+          }
+        }
+        var dataPurple = {
+          labels: labels,
+          datasets: [
+            {
+              label: "Data",
+              fill: true,
+              borderColor: config.colors.primary,
+              borderWidth: 2,
+              borderDash: [],
+              borderDashOffset: 0.0,
+              pointBackgroundColor: config.colors.primary,
+              pointBorderColor: "rgba(255,255,255,0)",
+              pointHoverBackgroundColor: config.colors.primary,
+              pointBorderWidth: 20,
+              pointHoverRadius: 4,
+              pointHoverBorderWidth: 15,
+              pointRadius: 4,
+              data: arrayVal[0],
+            },
+          ],
+        };
+
+        var dataBlue = {
+          labels: labels,
+          datasets: [
+            {
+              label: "Countries",
+              fill: true,
+              borderColor: config.colors.info,
+              borderWidth: 2,
+              borderDash: [],
+              borderDashOffset: 0.0,
+              data: arrayVal[2],
+            },
+          ],
+        };
+        var dataGreen = {
+          labels: labels,
+          datasets: [
+            {
+              label: "My First dataset",
+              fill: true,
+              borderColor: config.colors.danger,
+              borderWidth: 2,
+              borderDash: [],
+              borderDashOffset: 0.0,
+              pointBackgroundColor: config.colors.danger,
+              pointBorderColor: "rgba(255,255,255,0)",
+              pointHoverBackgroundColor: config.colors.danger,
+              pointBorderWidth: 20,
+              pointHoverRadius: 4,
+              pointHoverBorderWidth: 15,
+              pointRadius: 4,
+              data: arrayVal[3],
+            },
+          ],
+        };
+        this.purpleLineChart.chartData = dataPurple;
+        this.blueBarChart.chartData = dataBlue;
+        this.greenLineChart.chartData = dataGreen;
+        // this.bigLineChart.chartData.labels = labels;
+        // this.bigLineChart.allData = arrayVal;
+        // this.$refs.bigChart.updateGradients(this.chartData);
+        // this.initBigChart(0, labels);
+      });
+    },
+
+    // loadTotal() {},
+    // loadMonthByCountry(country, start, end) {},
   },
+  // created()
+  // {
+
+  // },
   mounted() {
+    this.loadMiniChart();
     this.i18n = this.$i18n;
     if (this.enableRTL) {
       this.i18n.locale = "ar";

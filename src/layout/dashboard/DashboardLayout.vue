@@ -24,14 +24,14 @@
         />
 
        
-        <!--  <sidebar-link to="/icons" :name="$t('sidebar.icons')" icon="tim-icons icon-atom" />
+        <!-- <sidebar-link to="/icons" :name="$t('sidebar.icons')" icon="tim-icons icon-atom" />
       
-        <sidebar-link to="/maps" :name="$t('sidebar.maps')" icon="tim-icons icon-pin" />
+        <sidebar-link to="/maps" :name="$t('sidebar.maps')" icon="tim-icons icon-pin" /> -->
         <sidebar-link
-          to="/typography"
-          :name="$t('sidebar.typography')"
+          to="/guess"
+          :name="$t('sidebar.guess')"
           icon="tim-icons icon-align-center"
-        />-->
+        />
         <!-- <sidebar-link
           to="/dashboard?enableRTL=true"
           :name="$t('sidebar.rtlSupport')"
